@@ -21,26 +21,30 @@ const unsigned char bikeFront [] PROGMEM = {
  */
 #define OLED_RESET 4
 Adafruit_SSD1306 display(OLED_RESET);
-int MAX_INCL_RESET_SWITCH = 8;
-int DISPLAY_CHANGE_SWITCH = 12;
-int max_incl_switch_state = 0;
-int display_switch_state = 0;
+int MAX_INCL_RESET_BUTTON = 8;
+int DISPLAY_CHANGE_BUTTON = 12;
+int max_incl_button_state = 0;
+int display_button_state = 0;
 int display_counter = 0;
-int16_t maxInclLeft = 0, maxInclRight = 0;
+int16_t maxInclLeft = 0;
+int16_t maxInclRight = 0;
+
 /*
  * Data for MPU6050
  *
  */
- int16_t axis_X,axis_Y,axis_Z;
- const int MPU_addr=0x68;
- MPU6050 sensor(MPU_addr);
+int16_t axis_X,axis_Y,axis_Z;
+const int MPU_addr=0x68;
+MPU6050 sensor(MPU_addr);
+int minVal=265;
+int maxVal=402;
+double x,y,z;
 
- int minVal=265;
- int maxVal=402;
- double x,y,z;
-
-
-int BRIGHTNESS_SWITCH = 2;
+/*
+ * PIN-Settings for LED´s
+ * PIN-Settings for Brightness
+ */
+int BRIGHTNESS_BUTTON = 2;
 int RIGHT_RED_LED = 3;
 int RIGHT_YELLOW_LED = 5;
 int GREEN_LED = 6;
@@ -48,22 +52,28 @@ int LEFT_YELLOW_LED = 9;
 int LEFT_RED_LED = 10;
 byte brightness = 150;
 int brightness_Counter = 4;
-int brightness_switch_state = LOW;
+int brightness_button_state = LOW;
 
-
+/*
+ * Initialize the OLED-Display
+ */
 void initializeDisplay(){
     display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
 }
 
+/*
+ * Initialize the MPU6050 Sensor
+ */
 void initializeMPU(){
-    // initialize device
-    Serial.println("Initializing I2C devices…");
+    Serial.println("Initializing…");
     sensor.initialize();
-    // verify connection
     Serial.println("Testing device connections…");
     Serial.println(sensor.testConnection() ? "MPU6050 connection successful" : "MPU6050 connection failed");
 }
 
+/*
+ * Shuts off all LED´s
+ */
 void shutOffLED(){
     analogWrite(RIGHT_RED_LED,0);
     analogWrite(RIGHT_YELLOW_LED,0);
@@ -72,6 +82,9 @@ void shutOffLED(){
     analogWrite(LEFT_RED_LED,0);
 }
 
+/*
+ * Only a initializing Circuit of the LED´s
+ */
 void initCircuitLED(){
     analogWrite(RIGHT_RED_LED,brightness);
     delay(50);
@@ -113,10 +126,13 @@ void showBootLogo(){
     display.clearDisplay();
 }
 
+/*
+ * Initialize the PinMode for the Buttons
+ */
 void initTaster(){
-    pinMode(BRIGHTNESS_SWITCH, INPUT);
-    pinMode(MAX_INCL_RESET_SWITCH, INPUT);
-    pinMode(DISPLAY_CHANGE_SWITCH, INPUT);
+    pinMode(BRIGHTNESS_BUTTON, INPUT);
+    pinMode(MAX_INCL_RESET_BUTTON, INPUT);
+    pinMode(DISPLAY_CHANGE_BUTTON, INPUT);
 }
 
 
@@ -208,6 +224,10 @@ void printSeparationLine(){
     display.drawLine(0, 8, display.width(), 8, WHITE);
 }
 
+/*
+ * Prints the current brightness at the point of change
+ * @param str brightness Value to print
+ */
 void printBrightnessOnDisplay(int16_t str){
     display.clearDisplay();
     display.setTextSize(0);
@@ -220,6 +240,9 @@ void printBrightnessOnDisplay(int16_t str){
     display.clearDisplay();
 }
 
+/*
+ * Changes the Brightness to spezified Values
+ */
 void changeBrightness(){
     switch(brightness_Counter){
         case(0): brightness = 0; printBrightnessOnDisplay(brightness); brightness_Counter++;break;
@@ -230,6 +253,18 @@ void changeBrightness(){
         case(5): brightness = 255; printBrightnessOnDisplay(brightness); brightness_Counter = 0;break;
     }
 }
+
+/*
+ * Due to the given angle. This Function lights UP the specified LED
+ * 0 to 20 = GREEN
+ * 340 to 360 = Green
+ * 21 to 30 = Yellow right
+ * 31 to 179 = Red right
+ * 330 to 339 = Yellow left
+ * 180 to 329 = Red left
+ *
+ * @param angle current angle of Sensor
+ */
 void light_Up_LED(int16_t angle){
     if(angle>=0 && angle <=20){ //green
         analogWrite(RIGHT_RED_LED, 0);
@@ -266,7 +301,7 @@ void light_Up_LED(int16_t angle){
         analogWrite(LEFT_YELLOW_LED, brightness);
         analogWrite(LEFT_RED_LED, 0);
     }else
-    if(angle < 330 && angle >=180){ // ret left
+    if(angle < 330 && angle >=180){ // red left
         analogWrite(RIGHT_RED_LED, 0);
         analogWrite(RIGHT_YELLOW_LED, 0);
         analogWrite(GREEN_LED, 0);
@@ -275,6 +310,9 @@ void light_Up_LED(int16_t angle){
     }
 }
 
+/*
+ * Shows the first Display-Layout. Currently the Main Layout.
+ */
 void showDisplay1(){
     display.clearDisplay();
     printRightInclination(maxInclRight);
@@ -307,6 +345,10 @@ void showDisplay1(){
     delay(250);
 }
 
+/*
+ * Shows the Second Display Layout
+ * The current Output is only transitionally
+ */
 void showDisplay2(){
     display.clearDisplay();
     display.setCursor(0, 0);
@@ -318,6 +360,10 @@ void showDisplay2(){
     delay(250);
 }
 
+/*
+ * Due to the Value of DisplayChange Button, this function changes between the
+ * different Display Layouts
+ */
 void switchDisplay(){
     switch(display_counter){
         case(0):showDisplay1();break;
@@ -325,24 +371,34 @@ void switchDisplay(){
     }
 }
 
+/*
+ * Read Brightness Button State
+ */
 void readBrightnessSwitchState(){
-    brightness_switch_state = digitalRead(BRIGHTNESS_SWITCH);
+    brightness_button_state = digitalRead(BRIGHTNESS_BUTTON);
 }
 
+/*
+ * Read MaxInclReset Button State
+ */
 void readMaxInclSwitchState(){
-    max_incl_switch_state = digitalRead(MAX_INCL_RESET_SWITCH);
+    max_incl_button_state = digitalRead(MAX_INCL_RESET_BUTTON);
 }
 
+/*
+ * Read DisplayChange Button State
+ */
 void readDisplaySwitchState(){
-    display_switch_state = digitalRead(DISPLAY_CHANGE_SWITCH);
+    display_button_state = digitalRead(DISPLAY_CHANGE_BUTTON);
 }
 
+/*
+ * Function that reset the max. Inclination Values to 0
+ */
 void resetMaxIncl(){
     maxInclLeft = 0;
     maxInclRight = 0;
 }
-
-
 
 void loop() {
     calculateSensorData();
@@ -350,13 +406,13 @@ void loop() {
     readMaxInclSwitchState();
     readDisplaySwitchState();
 
-    if(brightness_switch_state == HIGH){
+    if(brightness_button_state == HIGH){
         changeBrightness();
     }
-    if(max_incl_switch_state == HIGH){
+    if(max_incl_button_state == HIGH){
         resetMaxIncl();
     }
-    if(display_switch_state == HIGH){
+    if(display_button_state == HIGH){
         display_counter++;
         if(display_counter > 1){
             display_counter = 0;
