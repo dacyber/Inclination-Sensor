@@ -1,10 +1,11 @@
-#include <Arduino.h>
+
+#include <Arduino.h> //Important for platformio to include the default Function for Arudino
 #include <SPI.h>
 #include <Wire.h>
-#include <Adafruit_GFX.h>
-#include <Adafruit_SSD1306.h>
-#include <MPU6050.h>
-#include <I2Cdev.h>
+#include <Adafruit_GFX.h> //by Neal Horman
+#include <Adafruit_SSD1306.h> //by Adafruit Industries
+#include <MPU6050.h> //by Jeff Rowberg
+#include <I2Cdev.h> //by Jeff Rowberg
 
 const unsigned char bikeFront [] PROGMEM = {
     0x00, 0x00, 0x00, 0x30, 0x00, 0x0C, 0x38, 0xFF, 0x1C, 0x0D, 0xFF, 0xB0, 0x07, 0xFF, 0xE0, 0x07,
