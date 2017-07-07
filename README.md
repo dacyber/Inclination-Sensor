@@ -4,7 +4,7 @@ first Upload
 Hello,
 I decided to write down my Motivation for this tiny Project.
 
-In my real life I'am a ambitious Biker.
+In my real life I'am an ambitious Biker.
 To improve my skill and to get better control of the bike I decided to learn
 hanging-off(wo knee down).
 
