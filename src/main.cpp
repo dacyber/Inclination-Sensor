@@ -17,7 +17,6 @@ const unsigned char bikeFront [] PROGMEM = {
 
 /*
  * Data for display
- *
  */
 #define OLED_RESET 4
 Adafruit_SSD1306 display(OLED_RESET);
@@ -31,7 +30,6 @@ int16_t maxInclRight = 0;
 
 /*
  * Data for MPU6050
- *
  */
 int16_t axis_X,axis_Y,axis_Z;
 const int MPU_addr=0x68;
@@ -122,7 +120,7 @@ void showBootLogo(){
 	display.setCursor(display.width()-35, display.height()-10);
 	display.println("v0.1");
 	display.display();
-    delay(3000);
+    delay(2500);
     display.clearDisplay();
 }
 
@@ -134,7 +132,6 @@ void initTaster(){
     pinMode(MAX_INCL_RESET_BUTTON, INPUT);
     pinMode(DISPLAY_CHANGE_BUTTON, INPUT);
 }
-
 
 void setup(){
     Wire.begin();
@@ -149,20 +146,20 @@ void setup(){
 /*
  * Function that read Acc-Data from MPU6050 and calculate the x,y,z - Axis Angle
  */
- void calculateSensorData(){
-     axis_X = sensor.getAccelerationX();
-     axis_Y = sensor.getAccelerationY();
-     axis_Z = sensor.getAccelerationZ();
+void calculateSensorData(){
+    axis_X = sensor.getAccelerationX();
+    axis_Y = sensor.getAccelerationY();
+    axis_Z = sensor.getAccelerationZ();
 
-     int xAng = map(axis_X,minVal,maxVal,-90,90);
-     int yAng = map(axis_Y,minVal,maxVal,-90,90);
-     int zAng = map(axis_Z,minVal,maxVal,-90,90);
+    int xAng = map(axis_X,minVal,maxVal,-90,90);
+    int yAng = map(axis_Y,minVal,maxVal,-90,90);
+    int zAng = map(axis_Z,minVal,maxVal,-90,90);
 
 
-     x = RAD_TO_DEG * (atan2(-yAng, -zAng)+PI);
-     y = RAD_TO_DEG * (atan2(-xAng, -zAng)+PI);
-     z = RAD_TO_DEG * (atan2(-yAng, -xAng)+PI);
- }
+    x = RAD_TO_DEG * (atan2(-yAng, -zAng)+PI);
+    y = RAD_TO_DEG * (atan2(-xAng, -zAng)+PI);
+    z = RAD_TO_DEG * (atan2(-yAng, -xAng)+PI);
+}
 
 /*
  * Function to draw a Line with a specified angle.
