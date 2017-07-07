@@ -29,3 +29,6 @@ measure the current inclination of your Motorcycle.
 Sincere regards,
 
 Simon
+
+
+P.S. I use the i2cdevlib by Jeff Rowberg and the MPU6050 library by Adafruit Industries. Without these librarys my Project would never be completed. Thanks to all of them :)
