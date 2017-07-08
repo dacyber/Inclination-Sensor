@@ -7,6 +7,8 @@
 #include <MPU6050.h> //by Jeff Rowberg
 #include <I2Cdev.h> //by Jeff Rowberg
 
+//TODO Function that store an offset that depends on the current mountin Position
+
 const unsigned char bikeFront [] PROGMEM = {
     0x00, 0x00, 0x00, 0x30, 0x00, 0x0C, 0x38, 0xFF, 0x1C, 0x0D, 0xFF, 0xB0, 0x07, 0xFF, 0xE0, 0x07,
     0xFF, 0xE0, 0x0F, 0xFF, 0xF0, 0x1F, 0xFF, 0xF8, 0x3F, 0xFF, 0xFC, 0x6F, 0xFF, 0xF6, 0x0E, 0x00,
@@ -16,6 +18,17 @@ const unsigned char bikeFront [] PROGMEM = {
     0x00, 0x00, 0x7E, 0x00, 0x00, 0x3C, 0x00, 0x00, 0x18, 0x00, 0x00, 0x00, 0x00,
 };
 
+
+
+
+const unsigned char bikeBack [] PROGMEM = {
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0xF3, 0x00, 0x07, 0xFE, 0x00, 0x01, 0xF4, 0x00, 0x01,
+    0xFC, 0x00, 0x07, 0xFE, 0x00, 0x07, 0xFF, 0x00, 0x06, 0xFF, 0x00, 0x07, 0xFE, 0x00, 0x06, 0xFE,
+    0x00, 0x07, 0xFE, 0x00, 0x07, 0xFF, 0x00, 0x07, 0xFE, 0x00, 0x07, 0xFE, 0x00, 0x03, 0xFC, 0x00,
+    0x03, 0xFC, 0x00, 0x01, 0xF8, 0x00, 0x01, 0xF8, 0x00, 0x00, 0xF0, 0x00, 0x00, 0xF0, 0x00, 0x00,
+    0xF0, 0x00, 0x00, 0xF0, 0x00, 0x00, 0xF0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+};
 /*
  * Data for display
  */
@@ -183,8 +196,33 @@ void printAngleLine(float angle){ // angle in degree. Negative Values also allow
 }
 
 /*
- * Function to show the current Inclination
+ * prints a artificial horizon
+ *
  * @param angle
+ */
+void printHorizontalLine(float angle){
+    int16_t length_Line = 40;
+    int16_t origin_X = display.width()/2;
+    int16_t origin_Y = display.height()-1;
+    int16_t calc_X = 0;
+    int16_t calc_Y = 0;
+
+    calc_X = ((sin(angle*(PI/180))*length_Line)*2);
+    calc_Y = (cos(angle*(PI/180))*length_Line);
+
+    display.drawLine(origin_X - calc_X, origin_Y+calc_Y, origin_X + calc_X, origin_Y-calc_Y, WHITE);
+}
+/*
+ *
+ */
+void printMotorcycle(){
+    display.drawBitmap((display.width()/2)-20, 1, bikeBack, 24, 29, WHITE);
+    display.display();
+}
+
+/*
+ * Function to show the current Inclination
+ * @param angle inclination
  */
 void printCurrentInclination(int16_t angle){
     display.setTextSize(0);
@@ -195,7 +233,7 @@ void printCurrentInclination(int16_t angle){
 
 /*
  * Function to shows the inclination to the left side
- * @param angle
+ * @param angle of left inclination
  */
 void printLeftInclination(int16_t angle){
     display.setTextSize(0);
@@ -206,7 +244,7 @@ void printLeftInclination(int16_t angle){
 
 /*
  * Function to shows the inclination to the right side
- * @param angle inclination
+ * @param angle of right inclination
  */
 void printRightInclination(int16_t angle){
     display.setTextSize(0);
@@ -234,7 +272,7 @@ void printBrightnessOnDisplay(int16_t str){
     display.print("Helligkeit : ");
     display.println(str);
     display.display();
-    delay(350);
+    delay(200);
     display.clearDisplay();
 }
 
@@ -345,15 +383,31 @@ void showDisplay1(){
 
 /*
  * Shows the Second Display Layout
- * The current Output is only transitionally
+ * Shows the horizontal relational to the fixed body of Motorcycle
  */
 void showDisplay2(){
     display.clearDisplay();
-    display.setCursor(0, 0);
-    display.println("Inclination-Sensor");
-    display.println("v0.1");
-    display.println("Code written by");
-    display.println("Simon Decker");
+    printMotorcycle();
+    int16_t valueToPrint = 0;
+    light_Up_LED(x);
+    if(x < 90 && x >= 0){ //Darstellung zwischen 0 und 90 Grad
+        valueToPrint = x;
+        printHorizontalLine(90-valueToPrint);
+        if(x>maxInclRight){
+            maxInclRight = x;
+        }
+    }else
+    if(x >=270 && x < 360){ //Darstellung zwischen 270 und 360 Grad als 0 bis -90 Grad
+        valueToPrint = x-360 ;
+        printHorizontalLine(90-valueToPrint);
+        if(-valueToPrint > maxInclLeft){
+            maxInclLeft = -valueToPrint;
+        }
+    }else
+    if(x == 360){ // 360 Grad = 0 Grad
+        printHorizontalLine(0+90);
+    }
+    printCurrentInclination(valueToPrint);
     display.display();
     delay(250);
 }
@@ -411,6 +465,8 @@ void loop() {
         resetMaxIncl();
     }
     if(display_button_state == HIGH){
+        Serial.print("DisplayCounter: ");
+        Serial.println(display_counter);
         display_counter++;
         if(display_counter > 1){
             display_counter = 0;
