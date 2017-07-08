@@ -1,7 +1,10 @@
+# Inclination-Sensor
+first Upload
+
 Hello,
 I decided to write down my Motivation for this tiny Project.
 
-In my real life I'am a ambitious Biker.
+In my real life I'am an ambitious Biker.
 To improve my skill and to get better control of the bike I decided to learn
 hanging-off(wo knee down).
 
@@ -26,3 +29,6 @@ measure the current inclination of your Motorcycle.
 Sincere regards,
 
 Simon
+
+
+P.S. I use the i2cdevlib by Jeff Rowberg and the MPU6050 library by Adafruit Industries. Without these librarys my Project would never be completed. Thanks to all of them :)
