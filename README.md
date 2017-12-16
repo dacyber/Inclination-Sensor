@@ -16,15 +16,15 @@ I know, that there are few Apps of ECU build in features on the market....but...
 implement a little Application for Arduino.
 
 I'm studying Information Engineering at TH Cologne (Germany).
-My specialist field is not Android Programming, but I'm really interested in.
+My specialist field is not Arduino, but I'm really interested in.
 I'm Student and try to manage this with little money.
 I ordered an Arduino Nano (Uno for development environment), an 128x64 OLED-Display
 and finally a MPU6050(GY-521).
 An Android or Apple-Application wouldn't be the way to go.
 I wanted a small Case with all the needed functionality.
 My Solution were the best way for me.
-I hope my solution will help people in future to build a reliable Solution to
-measure the current inclination of your Motorcycle.
+I hope my solution will helps people in future to build a reliable Solution to
+measure the current inclination of their Motorcycle.
 
 Sincere regards,
 
